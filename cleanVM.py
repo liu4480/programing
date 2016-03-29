@@ -6,6 +6,7 @@ import commands
 import time
 import socket
 import smtplib
+import utils
 
 class Disk:
     def __init__(self, label, path, stat):
@@ -31,6 +32,10 @@ class VM:
                 self.lastmodified = disk.stat.st_mtime
         return self.lastmodified
 
+def canCleanVMs(pathname="/mnt/vm/"):
+	avail = utils.get_fs_freespace(pathname)
+	return avail < 1 - 0.6
+
 def formatVMs(vmlist, listname):
     content = '\n\tVMs are %s:' % listname
     for vm in vmlist:
@@ -55,16 +60,22 @@ def getVMList():
     delete_list=[]
     now = time.time()
     diff = 0
+    if canCleanVMs() == False:
+		sys.exit(-1)
     for el in elelist:
         vmname = el[7:][:-8].strip()
         cmd = 'virsh domblklist %s|grep \/' % (vmname)
         status, output = commands.getstatusoutput(cmd)
+        if status:
+            sys.exit(-1)
         disk_list = output.split('\n')
         expired = False
         delete = False
         vm = VM(vmname)
         for disk in disk_list:
             label, path = disk.strip().split()
+            if os.path.exists(path) == False:
+                continue
             stat_struct = os.stat(path)
             disk1 = Disk(label, path, stat_struct)
             vm.adddisk(disk1)
@@ -73,12 +84,14 @@ def getVMList():
         if diff >= 7776000:
             delete_list.append(vm)
             for disk in disk_list:
-            #    os.remove(disk.strip().split()[-1])
-            #    print "os.remove(%s)" % disk.strip().split()[-1]
-                pass
+                path1 = disk.strip().split()[-1]
+                if os.path.exists(path1) == False:
+                    continue
+                os.remove(path1)
+                print "os.remove(%s)" % path1
             cmd = "virsh undefine %s" % vmname
-            #status, output = commands.getstatusoutput(cmd)
-            #print "status, output = commands.getstatusoutput(%s)" % cmd
+            status, output = commands.getstatusoutput(cmd)
+            print "status, output = commands.getstatusoutput(%s)" % cmd
             
         elif diff >= 5184000 and diff < 7776000:
             expired_list.append(vm)
@@ -108,35 +121,35 @@ if os.path.exists('notice.txt'):
     content = content + f.read()
 print content
 
-import smtplib  
-from email.mime.text import MIMEText  
-mailto_list=["bliu@suse.com", "zzhou@suse.com"] 
+import smtplib
+from email.mime.text import MIMEText
+mailto_list=["bliu@suse.com"]#, "zzhou@suse.com"]
 mail_host="smtp.gmail.com"
 mail_port='587'
 mail_user="slehapek"
 mail_pass="susenovell"
 mail_postfix="gmail.com"
-  
+ 
 def send_mail(to_list,sub,content):
     me="slehapek"+"<"+mail_user+"@"+mail_postfix+">"
     msg = MIMEText(content,_subtype='plain',_charset='gb2312')
     msg['Subject'] = sub
     msg['From'] = me
-    msg['To'] = ";".join(to_list)  
-    try:  
+    msg['To'] = ";".join(to_list)
+    try:
         s = smtplib.SMTP(mail_host, mail_port)
         #s.ehlo()
         s.starttls()
         s.login(mail_user,mail_pass)
         s.sendmail(me, to_list, msg.as_string())
-        s.close()  
-        return True  
-    except Exception, e:  
-        print str(e)  
-        return False  
+        s.close()
+        return True
+    except Exception, e:
+        print str(e)
+        return False
 
-if __name__ == '__main__':  
-    if send_mail(mailto_list,title,content):  
+if __name__ == '__main__':
+    if send_mail(mailto_list,title,content):
         print "success"
-    else:  
+    else: 
         print "failed"
