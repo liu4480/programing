@@ -123,15 +123,15 @@ print content
 
 import smtplib
 from email.mime.text import MIMEText
-mailto_list=["bliu@suse.com"]#, "zzhou@suse.com"]
-mail_host="smtp.gmail.com"
-mail_port='587'
-mail_user="slehapek"
-mail_pass="susenovell"
-mail_postfix="gmail.com"
+mailto_list=["a@xxx.xxx", "b@xx.xxx"]
+mail_host="smtp.xxx.com"
+mail_port='xxx'
+mail_user="xxxxx"
+mail_pass="xxxxxx"
+mail_postfix="xxx.xxx"
  
 def send_mail(to_list,sub,content):
-    me="slehapek"+"<"+mail_user+"@"+mail_postfix+">"
+    me="xxx"+"<"+mail_user+"@"+mail_postfix+">"
     msg = MIMEText(content,_subtype='plain',_charset='gb2312')
     msg['Subject'] = sub
     msg['From'] = me
