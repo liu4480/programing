@@ -200,6 +200,6 @@ if __name__ == '__main__':
        elif opt == '-c':
            vm_list = value.split()
            for vmname in vm_list:
-               removeVMByName(value)
+               removeVMByName(vmname)
            sys.exit(0)
     usage()
