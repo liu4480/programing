@@ -1,0 +1,7 @@
+1. create a container and attach to it:
+docker run -itd --name=server_setup ubuntu /bin/bash
+docker attach server_setup
+
+2. another method
+PID=$(docker inspect --format {{.State.Pid}} <container_name_or_ID>)
+nsenter --target $PID --mount --uts --ipc --net --pid
