@@ -5,3 +5,198 @@ docker attach server_setup
 2. another method
 PID=$(docker inspect --format {{.State.Pid}} <container_name_or_ID>)
 nsenter --target $PID --mount --uts --ipc --net --pid
+
+如果无法通过以上命令连接到这个容器,有可能是因为宿主的默认shell在容器中并
+不存在,比如zsh,可以使用如下命令显式地使用bash。
+
+nsenter --target $PID --mount --uts --ipc --net --pid -- /usr/bin/env --ignore-environment HOME=/root/bin/bash --login
+
+nsenter启动一个新的shell进程(默认是/bin/bash),bash同时会把这个新进程切换到
+和目标(target)进程相同的命名空间,这样就相当于进入了容器内部。nsenter要正
+常工作需要有root权限。
+
+3.Docker不是虚拟机,容器中的应用都应该以前台执行,而不是像虚拟机、物理机
+里面那样,用upstart/systemd去启动后台服务,容器内没有后台服务的概念。
+
+4. to migrate image from one host to another
+1) docker registry
+2) by pv, ssh, docker save
+# docker save nginx | bzip2 | pv | ssh 147.2.212.91 'cat|docker load'
+
+5. list images
+# docker images --format "table{{.ID}}\t{{.Repository}}\t{{.Tag}}"
+
+6. 删除虚悬镜像
+#docker rmi $(docker images -q -format dangling=true)
+
+7 在Ubuntu/Debian上有UnionFS可以使用,如aufs或者overlay2, 而
+CentOS和RHEL的内核中没有相关驱动。因此对于这类系统,一般使用
+devicemapper驱动利用LVM的一些机制来模拟分层存储。这样的做法除了性能
+比较差外,稳定性一般也不好,而且配置相对复杂。Docker安装在CentOS/RHEL
+上后,会默认选择devicemapper ,但是为了简化配置,其devicemapper是
+跑在一个稀疏文件模拟的块设备上,也被称为loop-LVM。这样的选择是因为不
+需要额外配置就可以运行Docker,这是自动配置唯一能做到的事情。但是为了简化配置loop-
+LVM的做法非常不好,其稳定性、性能更差,无论是日志还是Dockerinfo中
+都会看到警告信息。官方文档有明确的文章讲解了如何配置块设备给
+devicemapper驱动做存储层的做法,这类做法也被称为配置direct-LVM 。
+
+除了前面说到的问题外,devicemapper+devicemapper loop-LVM还有一个缺陷,因为它是
+稀疏文件,所以它会不断增长。用户在使用过程中会注意到
+/var/lib/docker/devicemapper/devicemapper/data不断增长,而且无法控
+制。很多人会希望删除镜像或者可以解决这个问题,结果发现效果并不明显。原因
+就是这个稀疏文件的空间释放后基本不进行垃圾回收的问题。因此往往会出现即使
+删除了文件内容,空间却无法回收,随着使用这个稀疏文件一直在不断增长。
+所以对于CentOS/RHEL的用户来说,在没有办法使用UnionFS的情况下,一定
+要配置direct-LVM给devicemapper,无论是为了性能、稳定性还是空间利用率。
+    
+或许有人注意到了CentOS7中存在被backports回来的overlay2驱动,不过
+CentOS7里的这个驱动达不到生产环境使用的稳定程度,所以不推荐使用
+
+通常UnionFSFS有两个用途,有两个用途一方面可以实现不借助LVM、RAID将多个disk挂到
+同一个目录下,另一个更常用的就是将一个只读的分支和一个可写的分支联合在一
+起,LiveCD正是基于此方法可以允许在镜像不变的基础上允许用户在其上进行一
+些写操作。些写操作Dockerinfo在没有办法使用AUFS上构建的容器也是利用了类似的原理。
+
+8. export image
+sudo docker export 7691a814370e > ubuntu.tar
+
+9. import image
+cat ubuntu.tar|sudo docker import - test/ubuntu:v1.0
+
+此外,也可以通过指定URL或者某个目录来导入,例如
+sudo docker import http://example.com/exampleimage.tgz example/imagerepo
+
+10. docker-registry(https://github.com/docker/distribution) 项目下载源码进行安装。
+
+$ sudo apt-get install build-essential python-dev libevent-dev python-pip libssl-dev liblzma-dev libffi-dev
+$ git clone https://github.com/docker/distribution
+$ cd distribution
+$ sudo docker build .
+
+启动运行registry的容器
+$ sudo docker run -d -p 5000:5000 --restart=always --name registry ${IMAGE_ID}
+
+11. volume
+1) creattion
+#sudo docker run -d -P --name web -v /web apptraining/webapp
+2) deletion
+# docker rm -v
+3) backup
+首先使用--volumes-from标记来创建一个加载dbdata容器卷的容器,并从主机挂载当前目录到容器的/backup目录
+#sudo docker run --volumes-from dbdata -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /dbdata
+
+如果要恢复数据到一个容器,首先创建一个带有空数据卷的容器dbdata2。
+# docker run -v /dbdata2 --name dbdata2 ubuntu /bin/bash
+
+然后创建另一个容器,挂载dbdata2容器卷中的数据卷,并使用untar解压备份文件到挂载的容器卷中
+# docker run --volumes-from dbdata2 -v $(pwd):/backup busybox tar xvf /backup/backup.tar
+
+为了查看/验证恢复的数据,可以再启动一个容器挂载同样的容器卷来查看
+# docker run --volumes-from dbdata2 busybox /bin/ls/dbdata
+
+12. 外部访问容器
+当使用-P标记时,Dockerinfo会随机映射一个49000~49900的端口到内部容器开放的网络端口。
+-p(小写的)则可以指定要映射的端口,并且,在一个指定端口上只可以绑定一个容器。支持的格式有
+ip:hostPort:containerPort | containerPortip::containerPortip | hostPort:containerPortip
+
+13. 查看映射端口配置
+# docker port nostalgic_morse 5000
+127.0.0.1:49155
+
+14. 容器互联
+下面先创建一个新的数据库容器。
+# docker run --name db training/postgres
+
+创建一个新的webapp容器,并将它连接到db容器
+# docker run -P --name web --link db:db training/webapp python app.py
+
+--link参数的格式为--linkname:alias, 其中name是要链接的容器的名称, alias是这个连接的别名
+
+15. network
+当使用Dockerinfo启动时,会自动在主机上创建一个docker0 虚拟网桥,实际上是
+Linux的一个bridge,可以理解为一个软件交换机。它会在挂载到它的网口之间进行转发。
+
+当创建一个Dockerinfo容器的时候,同时会创建了一对vethpair 接口(当数据包
+发送到一个接口时,另外一个接口也可以收到相同的数据包)。这对接口一端在容
+器内,即eth0 ;另一端在本地并被挂载到docker0网桥,名称以vethpair 开头(例如
+vethAQI2QT)。通过这种方式,主机可以跟容器通信,容器之间也可以相互通信。
+Dockerinfo就创建了在主机和所有容器之间一个虚拟共享网络。
+
+1) for docker run
+这些选项只有在docker run执行时使用,因为它是针对容器的特性内容。
+    -h  HOSTNAME  or  --hostname=HOSTNAME           配置容器主机名
+    --link=CONTAINER_NAME:ALIAS                     添加到另一个容器的连接
+    --net=bridge|none|container:NAME_or_ID|host     配置容器的桥接模式
+    -p  SPEC    or  --publish=SPEC                  映射容器端口到宿主主机
+    -P  or  --publish-all=true|false                映射容器所有端口到宿主主机
+
+2) DNS
+    --link=CONTAINER_NAME:ALIAS 选项会在创建容器的时候,添加一个其他容器的主机名到
+                   /etc/hosts文件中,让新容器的进程可以使用主机名ALIAS就可以连接它。
+
+    --dns=IP_ADDRESS            添加DNS 服务器到容器的/etc/resolv.conf中,让容器用
+                   这个服务器来解析所有不在/etc/hosts中的主机名。
+
+    --dns-search=DOMAIN     设定容器的搜索域,当设定搜索域为 .example.com 时,在搜索
+                   一个名为host的主机时,DNS不仅搜索host,还会搜索host.example.com。 
+                   注意:如果没有上述最后2个选项,Docker会默认用主机上的/etc/resolv.conf
+
+3) 容器的访问控制,主要通过Linux上的iptables防火墙来进行管理和实现。
+3-1) 容器访问外部网络
+容器要想访问外部网络,需要本地系统的转发支持。在Linux系统中,检查转发是否打开。
+$sysctl net.ipv4.ip_forward
+net.ipv4.ip_forward = 1
+如果为  0,说明没有开启转发,则需要手动打开。
+$sysctl -w  net.ipv4.ip_forward=1
+
+如果在启动Docker服务的时候设定--ip-forward=true, Docker就会自动设定ip_forward为1。
+
+3-2) 容器之间访问
+容器之间相互访问,需要两方面:
+    容器的网络拓扑是否已经互联。默认情况下,所有容器都会被连接到docker0网桥上。
+    本地系统的防火墙iptables是否允许通过。
+
+4) 访问所有端口
+当启动Docker服务时候,默认会添加一条转发策略到iptables的FORWARD链上。策略为通过
+(ACCEPT)还是禁止(DROP)取决于配置--icc=true(缺省值)还是--icc=false。当然,如果手
+动指定--iptables=false则不会添加iptables规则。
+
+默认情况下,不同容器之间是允许网络互通的
+
+5) 访问指定端口
+在通过-icc=false关闭网络访问后,还可以通过--link=CONTAINER_NAME:ALIAS选项来访问容器的开放端口。
+
+6) 映射容器端口到宿主主机的实现
+默认情况下,容器可以主动访问到外部网络的连接,但是外部网络无法访问到容器。
+
+7) 容器访问外部实现
+容器所有到外部网络的连接,源地址都会被NAT成本地系统的IP地址。这是使用iptables的源地址伪装操作实现的。
+
+容器允许外部访问,可以在docker run时候通过-p或-P参数来启用。不管用那种办法,其实也是在本地的iptable的
+nat表中添加相应的规则。
+
+8) 配置 docker0 网桥
+Docker服务默认会创建一个docker0网桥(其上有docker0内部接口),它在内核层连通了其他的物理或虚拟网卡,
+这就将所有容器和本地主机都放到同一个物理网络。Docker默认指定了docker0接口的IP地址和子网掩码,让主
+机和容器之间可以通过网桥相互通信,它还给出了MTU(接口允许接收的最大传输单元),通常是1500Bytes,或宿主
+主机网络路由上支持的默认值。这些值都可以在服务启动的时候进行配置。
+    --bip=CIDR      --  IP  地址加掩码格式,例如 192.168.1.5/24
+    --mtu=BYTES     --  覆盖默认的  Docker  mtu 配置
+
+也可以在配置文件中配置  DOCKER_OPTS,然后重启服务。
+
+除了默认的docker0网桥,用户也可以指定网桥来连接各个容器。在启动Docker服务的时候,使用-b  BRIDGE或
+--bridge=BRIDGE来指定使用的网桥。
+如果服务已经运行,那需要先停止服务,并删除旧的网桥。
+# service docker stop
+# ip link set dev docker0 down
+# brctl delbr docker0
+然后创建一个网桥bridge0
+# brctl addbr bridge0
+# ip addr add 192.168.5.1/24 dev bridge0
+# ip link set dev bridge0 up
+
+配置Docker服务,默认桥接到创建的网桥上。
+# echo 'DOCKER_OPTS="-b=bridge0"'  >>  /etc/default/docker
+# service docker start
+启动Docker服务。新建一个容器,可以看到它已经桥接到了bridge0上。
