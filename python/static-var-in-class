@@ -1,0 +1,1 @@
+The Python approach is simple, it doesn’t require a static keyword. All variables which are assigned a value in class declaration are class variables. And variables which are assigned values inside class methods are instance variables.
