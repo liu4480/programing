@@ -1,0 +1,24 @@
+1. statistics
+2. reload
+
+For Python2.x
+reload(module)
+
+For above 2.x and <=Python3.3
+
+import imp
+imp.reload(module)
+
+For >=Python3.4
+
+import importlib
+importlib.reload(module)
+
+3. bisect
+The purpose of Bisect algorithm is to find a position in list where an element needs to be inserted to keep the list sorted.
+
+4. decimal
+Python in its definition provides certain methods to perform faster decimal floating point arithmetic using the module “decimal”. 
+
+5. networkx
+
