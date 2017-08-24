@@ -47,4 +47,7 @@ The idea is that this character stream contains all the information necessary to
     This type of error is also shown when your program is performing basic programming mistakes like dividing by 0.
     Check for the values of your variables, they can be vulnerable to integer flow.
 
-14. 
+14. virtualenv
+A virtual environment is a tool that helps to keep dependencies required by different projects separate by creating isolated python virtual environments for them. This is one of the most important tools that most of the Python developers use.
+
+15. 
