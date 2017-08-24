@@ -39,3 +39,12 @@ The idea is that this character stream contains all the information necessary to
 11. copyreg
 
 12. argparse
+
+13. NZEC Non Zero Exit Error
+    Infinite Recursion or if you have run out of stack memory.
+    Input and output both are NOT exactly same as the test cases.
+    As the online platforms, test your program using a computer code which matches your output with the specified outputs exactly.
+    This type of error is also shown when your program is performing basic programming mistakes like dividing by 0.
+    Check for the values of your variables, they can be vulnerable to integer flow.
+
+14. 
