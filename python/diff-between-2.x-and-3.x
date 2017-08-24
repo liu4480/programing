@@ -127,3 +127,7 @@ name 'trying_to_check_error' is not defined Error Caused
 
 6. _future_module
 This is basically not a difference between two version, but useful thing to mention here. The idea of __future__ module is to help in migration. We can use Python 3.x
+
+7. interactive input
+in 2.x, raw_input()
+while in 3.x, input() instead
