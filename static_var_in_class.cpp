@@ -24,14 +24,16 @@ public:
     }
     void print()
     {
-        cout << "a.b=" << b
-             << "a.c=" << c
-             << "a.d=" <<d << endl;
+        cout << "a.b=" << b << ends
+             << " a.c=" << c << ends
+             << " a.d=" <<d << endl;
     }
 };
 int a::d=0;
 int main(){
     class a aa(0,'a');
     aa.print();
+    class a aaa(1, 'A');
+    aaa.print();
     return 0;
 }
