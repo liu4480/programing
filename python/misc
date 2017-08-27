@@ -50,4 +50,12 @@ The idea is that this character stream contains all the information necessary to
 14. virtualenv
 A virtual environment is a tool that helps to keep dependencies required by different projects separate by creating isolated python virtual environments for them. This is one of the most important tools that most of the Python developers use.
 
-15. 
+15.imghdr
+Suppose you are given an image type file and you need to determine the type of that file. In simple words, you need to get the extension of that image type file. This can be used in a project to verify whether the image you have requested for is actually an image and with which extension does it come.
+
+16. https://github.com/SKKSaikia/Data-Analysis
+
+17. bloom filter
+A Bloom filter is a space-efficient probabilistic data structure that is used to test whether an element is a member of a set. For example, checking availability of username is set membership problem, where the set is the list of all registered username. The price we pay for efficiency is that it is probabilistic in nature that means, there might be some False Positive results. False positive means, it might tell that given username is already taken but actually it’s not.
+
+
