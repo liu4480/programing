@@ -1,9 +1,8 @@
-#! /usr/bin/python3
-
+#! /usr/bin/python
+# -*- encoding:utf-8 -*-
 import PyPDF2
-# -*- encoding : utf-8 -*-
 
-pdfFileObj = open("working-images-python.pdf", 'rb')
+pdfFileObj = open("/home/liub/桌面/glusterfs/doc/legacy/coding-standard.pdf", 'rb')
 
 pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
 
