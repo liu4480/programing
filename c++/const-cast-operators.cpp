@@ -40,13 +40,16 @@ int main(void)
     int *ptr1 = const_cast<int*>(ptr);
     cout << fun(ptr1) << endl;
  
-    //int a1 = 40;
-    //const int * b1 = &a1;
-    //invalid const_cast from type ‘const int*’ to type ‘char*’
-    //char * c1 = const_cast<char*>(b1);
-    //*c1 = 'A';
-
     int a1 = 40;
+    const int * b2 = &a1;
+    //invalid const_cast from type ‘const int*’ to type ‘char*’
+    //char * c2 = const_cast<char*>(b2);
+    char * c2 = (char*)(b2);
+    cout << *b2 << endl;
+    *c2 = 'A';
+    cout << *b2 << endl;
+
+    a1 = 40;
     const volatile int * b1 = &a1;
     cout << "typeid of b1 " << typeid(b1).name() << endl;
     int * c1 = const_cast<int *>(b1);
