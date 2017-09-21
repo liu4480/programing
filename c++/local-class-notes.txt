@@ -1,0 +1,15 @@
+1. A local class type name can only be used in the enclosing function. For example, in the following program, declarations of t and tp are valid in fun(), but invalid in main().
+
+2. All the methods of Local classes must be defined inside the class only. 
+
+3. A Local class cannot contain static data members. It may contain static functions though. 
+
+4. Member methods of local class can only access static and enum variables of the enclosing function. Non-static variables of the enclosing function are not accessible inside local classes.
+
+5. Local classes can access global types, variables and functions. Also, local classes can access other local classes of same function.
+
+In C++, a Copy Constructor may be called in following cases:
+1. When an object of the class is returned by value.
+2. When an object of the class is passed (to a function) by value as an argument.
+3. When an object is constructed based on another object of the same class.
+4. When compiler generates a temporary object.
