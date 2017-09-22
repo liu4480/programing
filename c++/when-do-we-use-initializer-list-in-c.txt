@@ -1,0 +1,13 @@
+1. const data members must be initialized using Initializer List. 
+
+2. Reference members must be initialized using Initializer List.
+
+3. For initialization of member objects which do not have default constructor
+
+4. For initialization of base class members 
+
+5. When constructor’s parameter name is same as data member
+
+6. For Performance reasons: It is better to initialize all class variables in Initializer List instead of assigning values inside body. 
+
+7. 
