@@ -1,0 +1,41 @@
+1) operators can not be overloaded:
+.(dot)
+::
+:?
+sizeof
+
+2) importance points about operator overloading:
+a) For operator overloading to work, at leas one of the operands must be a user defined class object.
+b) Assignment Operator: Compiler automatically creates a default assignment operator with every class. The default assignment operator does assign all members of right side to the left side and works fine most of the cases (this behavior is same as copy constructor). 
+c) Conversion Operator: We can also write conversion operators that can be used to convert one type to another type.
+
+
+d) Any constructor that can be called with a single argument works as a conversion constructor, means it can also be used for implicit conversion to the class being constructed.
+#include<iostream> 
+using namespace std;
+ 
+class Point
+{
+private:
+    int x, y;
+public:
+    Point(int i = 0, int j = 0) {
+        x = i;   y = j;
+    }
+    void print() {
+        cout << endl << " x = " << x << ", y = " << y;
+    }
+};
+ 
+int main() {
+    Point t(20, 20);
+    t.print();
+    t = 30;   // Member x of t becomes 30
+    t.print();
+    return 0;
+}
+
+Output:
+
+ x = 20, y = 20
+ x = 30, y = 0
