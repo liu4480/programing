@@ -1,0 +1,402 @@
+1. Can we call an undeclared function in C++?
+
+Calling an undeclared function is poor style in C (See this) and illegal in C++. So is passing arguments to a function using a declaration that doesn’t list argument types: 
+
+If we save the below program in a .c file and compile it, it works without any error. But, if we save the same in a .cpp file, it doesn’t compile.
+
+#include<stdio.h>
+
+void f(); /* Argument list is not mentioned */
+
+int main()
+{
+   f(2); /* Poor style in C, invalid in C++*/
+   getchar();
+   return 0;
+}
+
+void f(int x)
+{ 
+   printf("%d", x);
+}
+
+
+2. Can we access global variable if there is a local variable with same name?
+In C, we cannot access a global variable if we have a local variable with same name, but it is possible in C++ using scope resolution operator (::).
+#include<iostream>
+ 
+using namespace std;
+ 
+int x;  // Global x
+ 
+int main()
+{
+  int x = 10; // Local x
+  cout<<"Value of global x is "<<::x<<endl;
+  cout<<"Value of local x is "<<x;  
+  getchar();
+  return 0;
+}
+
+3. Can we use function on left side of an expression in C and C++?
+#include<iostream>
+ 
+using namespace std;
+ 
+/* such a function will not be safe if x is non static variable of it */
+int &fun()
+{
+   static int x; 
+   return x;
+}    
+ 
+int main()
+{
+   fun() = 10;
+ 
+   /* this line prints 10 on screen */
+   printf(" %d ", fun());
+ 
+   getchar();
+   return 0;
+}
+
+
+4. Can we access private data members of a class without using a member or
+ a friend function?
+
+The idea of Encapsulation is to bundle data and methods (that work on the
+data) together and restrict access of private data members outside the
+class. In C++, a friend function or friend class can also access private
+data members.
+
+Is it possible to access private members outside a class without friend?
+Yes, it is possible using pointers. See the following program as an example.
+#include<iostream>
+using namespace std;
+ 
+class Test
+{
+private:
+    int data;
+public:
+    Test() { data = 0; }
+    int getData() { return data; }
+};
+ 
+int main()
+{
+    Test t;
+    int* ptr = (int*)&t;
+    *ptr = 10;
+    cout << t.getData();
+    return 0;
+}
+
+Note that the above way of accessing private data members is not at all a
+recommended way of accessing members and should never be used. Also, it
+doesn’t mean that the encapsulation doesn’t work in C++. The idea of making
+private members is to avoid accidental changes. The above change to data is
+not accidental. It’s an intentionally written code to fool the compiler.
+
+
+5. How to make a C++ class whose objects can only be dynamically allocated?
+The problem is to create a class such that the non-dynamic allocation of
+object causes compiler error. For example, create a class ‘Test’ with
+following rules.
+
+Test t1;  // Should generate compiler error
+Test *t3 = new Test; // Should work fine
+
+The idea is to create a private destructor in the class. When we make a
+private destructor, the compiler would generate a compiler error for
+non-dynamically allocated objects because compiler need to remove them
+from stack segment once they are not in use.
+
+Since compiler is not responsible for deallocation of dynamically allocated
+objects (programmer should explicitly deallocate them), compiler won’t have
+any problem with them. To avoid memory leak, we create a friend function
+destructTest() which can be called by users of class to destroy objects.
+
+#include <iostream>
+using namespace std;
+ 
+// A class whose object can only be dynamically created
+class Test
+{
+private:
+    ~Test() { cout << "Destroying Object\n"; }
+public:
+     Test() { cout << "Object Created\n"; }
+friend void destructTest(Test* );
+};
+ 
+// Only this function can destruct objects of Test
+void destructTest(Test* ptr)
+{
+    delete ptr;
+    cout << "Object Destroyed\n";
+}
+ 
+int main()
+{
+    /* Uncommenting following following line would cause compiler error */
+    // Test t1;
+ 
+    // create an object
+    Test *ptr = new Test;
+ 
+    // destruct the object to avoid memory leak
+    destructTest(ptr);
+ 
+    return 0;
+}
+
+If we don’t want to create a friend function, we can also overload delete and delete[] operators 
+
+
+6. How to print “GeeksforGeeks” with empty main() in C, C++ and Java?
+
+1) for C Language
+a. One way of doing this is to apply GCC constructor attribute to a function so that it executes before main() (See this for details).
+
+#include <stdio.h>
+
+/* Apply the constructor attribute to myStartupFun() 
+   so that it is executed before main() */
+void myStartupFun(void) __attribute__((constructor));
+
+/* implementation of myStartupFun */
+void myStartupFun(void)
+{
+    printf("GeeksforGeeks");
+}
+
+int main()
+{
+}
+b. In linux, just override the default definition of _start() function so
+that it would work as a custom startup code. 
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void)
+{
+}
+
+// _start() function
+void _start(void)
+{
+    printf("GeeeksforGeeks");
+
+    // Call main() function
+    int var = main();
+    exit(var);
+}
+
+gcc -nostartfiles -o file file.c
+
+2) for C++ Language
+a) The idea is to create a class, have a cout statement in constructor and 
+create a global object of the class. When the object is created, constructor
+is called and “GeeksforGeeks” is printed.
+
+#include <iostream>
+
+class MyClass {
+public:
+    MyClass()
+    {
+        std::cout << "GeeksforGeeks";
+    }
+} m;
+
+int main()
+{
+}
+
+b) The idea is to create struct and use the same logic which is discussed 
+in above. 
+#include <iostream>
+
+struct Mystruct {
+
+    Mystruct()
+    {
+        std::cout << "GeeksforGeeks";
+    }
+} obj;
+
+int main() {}
+
+c) By using global variable, idea is to initialise printf() function to
+global variable, but it will work only in C++ language as in C language
+we can’t initialise variable or expression like this to global variable. 
+#include <cstdio>
+
+int var = printf("GeeksforGeeks");
+
+int main()
+{
+}
+
+3) Java
+class Myjava {
+    static
+    {
+        System.out.println("GeeksforGeeks");
+    }
+    public static void main(String args[])
+    {
+    }
+}
+
+
+7. print 1 to 100 in C++, without loop and recursion
+#include <iostream>
+using namespace std;
+ 
+template<int N>
+class PrintOneToN
+{
+public:
+    static void print()
+    {
+        PrintOneToN<N-1>::print();  // Note that this is not recursion
+        cout << N << endl;
+    }
+};
+ 
+template<>
+class PrintOneToN<1>
+{
+public:
+    static void print()
+    {
+        cout << 1 << endl;
+    }
+};
+int main()
+{
+    const int N = 100;
+    PrintOneToN<N>::print();
+    return 0;
+}
+
+#include<iostream>
+using namespace std;
+ 
+class A
+{
+public:
+    static int a;
+    A()
+    {  cout<<a++<<endl;  }
+};
+ 
+int A::a = 1;
+ 
+int main()
+{
+    int N = 100;
+    A obj[N];
+    return 0;
+}
+
+
+8. How to restrict dynamic allocation of objects in C++?
+The idea of is to keep new operator function private so that new cannot be
+called.
+
+#include <iostream>
+using namespace std;
+ 
+// Objects of Test can not be dynamically allocated
+class Test
+{
+    // Notice this, new operator function is private
+    void* operator new(size_t size);
+    int x;
+public:
+    Test()          { x = 9; cout << "Constructor is called\n"; }
+    void display()  { cout << "x = " << x << "\n";  }
+    ~Test()         { cout << "Destructor is executed\n"; }
+};
+ 
+int main()
+{
+    // Uncommenting following line would cause a compile time error.
+    // Test* obj=new Test();
+    Test t;          // Ok, object is allocated at compile time
+    t.display();
+    return 0;
+} // object goes out of scope, destructor will be called
+
+
+9. How can we sum the digits of a given number in single statement?
+1) Iterative:
+# include<stdio.h>
+/* Function to get sum of digits */
+int getSum(int n)
+{
+    int sum;
+    /*Single line that calculates sum*/
+    for(sum=0; n > 0; sum+=n%10,n/=10);
+    return sum;
+}
+
+int main()
+{
+  int n = 687;
+  printf(" %d ", getSum(n));
+  return 0;
+}
+
+2) Recursive
+int sumDigits(int no)
+{
+  return no == 0 ? 0 : no%10 + sumDigits(no/10) ;
+}
+
+int main(void)
+{
+  printf("%d", sumDigits(1352));
+  getchar();
+  return 0;
+}
+
+10. how-to-swap-two-variables-in-one-line
+// C/C++ program to swap two variables in single line
+#include <stdio.h>
+int main()
+{
+    int x = 5, y = 10;
+    (x ^= y), (y ^= x), (x ^= y); 
+    printf("After Swapping values of x and y are %d %d",
+            x, y);
+    return 0;
+}
+
+11. C/C++ program to shutdown a system
+Linux OS:
+// C program to shutdown in Linux
+#include <stdio.h>
+#include <stdlib.h>
+ 
+int main()
+{
+   // Running Linux OS command using system
+   system("shutdown -P now");
+   
+   return 0;
+}
+
+We will make use of system() from < stdlib.h > to perform a system operation with the help of a C program.To perform any of the afore-mentioned system operation we will code as:
+#include <stdio.h>
+#include <stdlib.h>
+ 
+int main()
+{
+  system("c:\\windows\\system32\\shutdown /i");
+  return 0;
+}

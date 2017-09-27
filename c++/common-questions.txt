@@ -1,0 +1,183 @@
+1. What are the differences between C and C++?
+1) C++ is a kind of superset of C, most of C programs except few exceptions
+work in C++ as well.
+2) C is a procedural programming language, but C++ supports both procedural
+and Object Oriented programming.
+3) Since C++ supports object oriented programming, it supports features like
+function overloading, templates, inheritance, virtual functions, friend
+functions. These features are absent in C.
+4) C++ supports exception handling at language level, in C exception
+handling is done in traditional if-else style.
+5) C++ supports references, C doesn’t.
+6) In C, scanf() and printf() are mainly used input/output. C++ mainly uses
+streams to perform input and output operations. cin is standard input
+stream and cout is standard output stream.
+
+2. What are differences between references and pointers?
+Both references and pointers can be used to change local variables of one 
+function inside another function. Both of them can also be used to save
+copying of big objects when passed as arguments to functions or returned
+from functions, to get efficiency gain.
+Despite above similarities, there are following differences between 
+references and pointers.
+
+1)References are less powerful than pointers
+a) Once a reference is created, it cannot be later made to reference another
+object; it cannot be reseated. This is often done with pointers.
+b) References cannot be NULL. Pointers are often made NULL to indicate that they are not pointing to any valid thing.
+c) A reference must be initialized when declared. There is no such restriction with pointers
+
+Due to the above limitations, references in C++ cannot be used for 
+implementing data structures like Linked List, Tree, etc. In Java, 
+references don’t have above restrictions, and can be used to implement all 
+data structures. References being more powerful in Java, is the main reason
+Java doesn’t need pointers.
+
+2) References are safer and easier to use:
+a) Safer: Since references must be initialized, wild references like wild 
+pointers are unlikely to exist. It is still possible to have references 
+that don’t refer to a valid location
+b) Easier to use: References don’t need dereferencing operator to access 
+the value. They can be used like normal variables. ‘&’ operator is needed 
+only at the time of declaration. Also, members of an object reference can 
+be accessed with dot operator (‘.’), unlike pointers where arrow operator
+(->) is needed to access members.
+
+3. What are virtual functions – Write an example?
+Virtual functions are used with inheritance, they are called according to 
+the type of object pointed or referred, not according to the type of pointer
+or reference. In other words, virtual functions are resolved late, at 
+runtime. Virtual keyword is used to make a function virtual.
+
+Following things are necessary to write a C++ program with runtime polymorphism (use of virtual functions)
+1) A base class and a derived class.
+2) A function with same name in base class and derived class.
+3) A pointer or reference of base class type pointing or referring to an 
+object of derived class.
+
+4. What is this pointer?
+The ‘this’ pointer is passed as a hidden argument to all nonstatic member 
+function calls and is available as a local variable within the body of all 
+nonstatic functions. ‘this’ pointer is a constant pointer that holds the 
+memory address of the current object. ‘this’ pointer is not available in 
+static member functions as static member functions can be called without 
+any object (with class name).
+
+5. Can we do “delete this”?
+1) delete operator works only for objects allocated using operator new (See http://www.geeksforgeeks.org/?p=8539). If the object is created using new, then we can do delete this, otherwise behavior is undefined.
+
+class A
+{
+  public:
+    void fun()
+    {
+        delete this;
+    }
+};
+
+int main()
+{
+  /* Following is Valid */
+  A *ptr = new A;
+  ptr->fun();
+  ptr = NULL // make ptr NULL to make sure that things are not accessed using ptr. 
+
+
+  /* And following is Invalid: Undefined Behavior */
+  A a;
+  a.fun();
+
+  getchar();
+  return 0;
+}
+
+2) Once delete this is done, any member of the deleted object should not be accessed after deletion.
+#include<iostream>
+using namespace std;
+
+class A
+{
+  int x;
+  public:
+    A() { x = 0;}
+    void fun() {
+      delete this;
+
+      /* Invalid: Undefined Behavior */
+      cout<<x;
+    }
+};
+
+6. What are VTABLE and VPTR?
+vtable is a table of function pointers. It is maintained per class.
+vptr is a pointer to vtable. It is maintained per object.
+
+Compiler adds additional code at two places to maintain and use vtable and 
+vptr.
+
+1) Code in every constructor. This code sets vptr of the object being 
+created. This code sets vptr to point to vtable of the class.
+2) Code with polymorphic function call (e.g. bp->show() in above code). 
+Wherever a polymorphic call is made, compiler inserts code to first look for
+vptr using base class pointer or reference (In the above example, since 
+pointed or referred object is of derived type, vptr of derived class is 
+accessed). Once vptr is fetched, vtable of derived class can be accessed. 
+Using vtable, address of derived derived class function show() is accessed and called.
+
+7. What is Object Oriented Programming?
+Object Oriented Programming (OOP) is a programming paradigm where the 
+complete software operates as a bunch of objects talking to each other. An 
+object is a collection of data and methods that operate on its data.
+
+8. Why OOP?
+The main advantage of OOP is better manageable code that covers following.
+
+1) The overall understanding of the software is increased as the distance 
+between the language spoken by developers and that spoken by users.
+
+2) Object orientation eases maintenance by the use of encapsulation.   One 
+can easily change the underlying representation by keeping the methods same.
+
+OOP paradigm is mainly useful for relatively big software. 
+
+9. What are main features of OOP?
+Encapsulation
+Polymorphism
+Inheritance
+
+10. What is encapsulation?
+Encapsulation is referred to one of the following two notions.
+1) Data hiding: A language feature to restrict access to members of an 
+object. For example, private and protected members in C++.
+2) Bundling of data and methods together: Data and methods that operate on
+that data are bundled together.
+
+11. What is Polymorphism? How is it supported by C++?
+Polymorphism means that some code or operations or objects behave 
+differently in different contexts. In C++,  following features support 
+polymorphism.
+
+Compile Time Polymorphism: Compile time polymorphism means compiler knows 
+which function should be called when a polymorphic call is made.  C++ 
+supports compiler time polymorphism by supporting features like templates, 
+function overloading and default arguments.
+
+Run Time Polymorphism: Run time polymorphism is supported by virtual 
+functions. The idea is, virtual functions are called according to the 
+type of object pointed or referred, not according to the type of pointer
+or reference. In other words, virtual functions are resolved late, at 
+runtime.
+
+12. What is Inheritance? What is the purpose?
+The idea of inheritance is simple, a class is based on another class and 
+uses data and implementation of the other class.
+The purpose of inheritance is Code Reuse. 
+
+13. What is Abstraction?
+The first thing with which one is confronted when writing programs is the 
+problem. Typically we are confronted with “real-life” problems and we want 
+to make life easier by providing a program for the problem. However, 
+real-life problems are nebulous and the first thing we have to do is to try
+to understand the problem to separate necessary from unnecessary details: We
+try to obtain our own abstract view, or model, of the problem. This process
+of modeling is called abstraction.
