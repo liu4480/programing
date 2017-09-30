@@ -1,0 +1,23 @@
+1. 创建应用程序代码
+Extest.C
+
+2. 用样板来包装代码
+Extest2.c
+
+3. 编译
+setup.py
+
+#python setup.py build
+4. 导入和测试
+# python setup.py install
+# python
+Python 2.7.13 (default, Jan 03 2017, 17:41:54) [GCC] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import Extest
+>>> Extest.test()
+4!==24
+8!==40320
+12!==479001600
+reversing 'abcdef', we get 'fedcba'
+reversing 'madam', we get 'madam'
+
