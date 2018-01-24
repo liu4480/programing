@@ -1,0 +1,13 @@
+1. to build the project:
+#GOPATH=$GOPATH:`pwd`
+#go build calc
+
+2. to debug the project
+#go build -gcflags "-N -l" calc 
+#gdb calc
+...
+(gdb)source /usr/local/src/go/src/runtime/runtime-gdb.py
+Loading Go Runtime support.
+(gdb)b main.main
+(gdb)set args add 2 3
+(gdb)run
